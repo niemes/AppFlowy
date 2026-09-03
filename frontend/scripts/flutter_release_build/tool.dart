@@ -42,7 +42,7 @@ class BuildTool {
     }
 
     if (os == 'linux') {
-      return 'cargo make --env APP_VERSION=$appVersion --profile production-linux-x86_64 appflowy';
+      return 'cargo make --env APP_VERSION=$appVersion --profile production-linux-aarch64 appflowy';
     }
 
     if (os == 'macos') {
