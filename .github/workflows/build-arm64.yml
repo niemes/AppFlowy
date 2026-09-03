@@ -76,6 +76,9 @@ jobs:
       - name: Build AppFlowy (ARM64)
         working-directory: frontend
         run: |
+          # Ensure protoc-gen-dart (installed by `dart pub global activate protoc_plugin`,
+          # which cargo-make runs during the build) is on PATH for the Rust build script.
+          export PATH="$HOME/.pub-cache/bin:$PATH"
           flutter config --enable-linux-desktop
           dart ./scripts/flutter_release_build/build_flowy.dart run . ${{ env.APP_VERSION }}
 
