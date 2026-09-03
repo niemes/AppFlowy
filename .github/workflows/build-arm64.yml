@@ -33,20 +33,23 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: "stable"
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+      - name: Install Flutter (from source, ARM64)
+        # subosito/flutter-action can't resolve linux-arm64 archives (they're x64-only
+        # in Flutter's release channel), so git-clone the SDK and let it fetch the
+        # linux-arm64 engine at build time.
+        shell: bash
+        run: |
+          git clone --depth 1 --branch ${{ env.FLUTTER_VERSION }} https://github.com/flutter/flutter.git "$HOME/flutter"
+          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+          flutter --version
 
       - name: Install Rust toolchain (arm64)
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_TOOLCHAIN }}
-          target: aarch64-unknown-linux-gnu
-          override: true
-          components: rustfmt
-          profile: minimal
+        shell: bash
+        run: |
+          rustup toolchain install ${{ env.RUST_TOOLCHAIN }} --profile minimal --component rustfmt
+          rustup default ${{ env.RUST_TOOLCHAIN }}
+          rustup target add aarch64-unknown-linux-gnu
+          rustc -vV | grep host
 
       - name: Verify we are building for ARM64
         run: |
