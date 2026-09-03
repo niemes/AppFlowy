@@ -1,7 +1,7 @@
 name: build-arm64
 
 # Builds AppFlowy natively for linux-aarch64 on GitHub-hosted ARM64 runners
-# and uploads the .deb as a downloadable artifact.
+# and uploads the app bundle (tar.gz) as a downloadable artifact.
 #
 # ARM64 runners (ubuntu-24.04-arm) are free for public repos and have 16GB+
 # of RAM, so the Flutter + RocksDB + Rust release build completes without
@@ -21,14 +21,13 @@ on:
 
 jobs:
   build-linux-arm64:
-    name: Linux ARM64 (.deb)
+    name: Linux ARM64
     runs-on: ubuntu-24.04-arm
     env:
       FLUTTER_VERSION: ${{ github.event.inputs.flutter_version }}
       RUST_TOOLCHAIN: "1.85.0"
       APP_VERSION: ${{ github.event.inputs.version }}
       LINUX_APP_RELEASE_PATH: frontend/appflowy_flutter/product/${{ github.event.inputs.version }}/linux/Release
-      LINUX_PACKAGE_DEB_NAME: AppFlowy-${{ github.event.inputs.version }}-linux-arm64.deb
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -68,7 +67,7 @@ jobs:
           sudo wget -qO /etc/apt/trusted.gpg.d/dart_linux_signing_key.asc https://dl-ssl.google.com/linux/linux_signing_key.pub
           sudo wget -qO /etc/apt/sources.list.d/dart_stable.list https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_stable.list
           sudo apt-get update
-          sudo apt-get install -y build-essential libsqlite3-dev libssl-dev clang cmake ninja-build pkg-config libgtk-3-dev libcurl4-openssl-dev keybinder-3.0 libnotify-dev alien dpkg-dev
+          sudo apt-get install -y build-essential libsqlite3-dev libssl-dev clang cmake ninja-build pkg-config libgtk-3-dev libcurl4-openssl-dev keybinder-3.0 libnotify-dev
           source $HOME/.cargo/env
           cargo install --force --locked cargo-make
           cargo install --force --locked duckscript_cli
@@ -80,23 +79,9 @@ jobs:
           flutter config --enable-linux-desktop
           dart ./scripts/flutter_release_build/build_flowy.dart run . ${{ env.APP_VERSION }}
 
-      - name: Package as .deb
-        working-directory: frontend
-        run: |
-          sh scripts/linux_distribution/deb/build_deb.sh \
-            appflowy_flutter/product/${{ env.APP_VERSION }}/linux/Release \
-            ${{ env.APP_VERSION }} \
-            ${{ env.LINUX_PACKAGE_DEB_NAME }}
-
       - name: Verify ARM64 binary
         working-directory: frontend
         run: file appflowy_flutter/product/${{ env.APP_VERSION }}/linux/Release/AppFlowy/AppFlowy
-
-      - name: Upload .deb artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: appflowy-linux-arm64
-          path: frontend/${{ env.LINUX_PACKAGE_DEB_NAME }}
 
       - name: Upload bundled app (tar.gz)
         working-directory: frontend
@@ -105,5 +90,5 @@ jobs:
             -C appflowy_flutter/product/${{ env.APP_VERSION }}/linux/Release AppFlowy
       - uses: actions/upload-artifact@v4
         with:
-          name: appflowy-linux-arm64-bundle
+          name: appflowy-linux-arm64
           path: frontend/appflowy-${{ env.APP_VERSION }}-linux-arm64.tar.gz
