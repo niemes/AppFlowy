@@ -38,10 +38,15 @@ jobs:
         # in Flutter's release channel), so git-clone the SDK and let it fetch the
         # linux-arm64 engine at build time.
         shell: bash
-        run: |
-          git clone --depth 1 --branch ${{ env.FLUTTER_VERSION }} https://github.com/flutter/flutter.git "$HOME/flutter"
-          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
-          flutter --version
+        run: git clone --depth 1 --branch ${{ env.FLUTTER_VERSION }} https://github.com/flutter/flutter.git "$HOME/flutter"
+
+      - name: Add Flutter to PATH
+        shell: bash
+        run: echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Flutter (ARM64)
+        shell: bash
+        run: flutter --version
 
       - name: Install Rust toolchain (arm64)
         shell: bash
